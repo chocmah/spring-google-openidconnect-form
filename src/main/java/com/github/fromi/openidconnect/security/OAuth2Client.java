@@ -3,6 +3,8 @@ package com.github.fromi.openidconnect.security;
 import static java.util.Arrays.asList;
 import static org.springframework.security.oauth2.common.AuthenticationScheme.form;
 
+import java.io.IOException;
+
 import javax.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -10,12 +12,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.oauth2.client.http.OAuth2ErrorHandler;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
+import org.springframework.web.client.ResponseErrorHandler;
 
 @Configuration
 @EnableOAuth2Client
@@ -36,7 +41,8 @@ public class OAuth2Client {
         googleOAuth2Details.setClientSecret(clientSecret);
         googleOAuth2Details.setUserAuthorizationUri("https://accounts.google.com/o/oauth2/auth");
         googleOAuth2Details.setAccessTokenUri("https://www.googleapis.com/oauth2/v3/token");
-        googleOAuth2Details.setScope(asList("openid"));
+        googleOAuth2Details.setScope(asList("openid","email"));
+        
         return googleOAuth2Details;
     }
 
@@ -47,6 +53,9 @@ public class OAuth2Client {
     @Bean
     @Scope(value = "session", proxyMode = ScopedProxyMode.INTERFACES)
     public OAuth2RestOperations googleOAuth2RestTemplate() {
-        return new OAuth2RestTemplate(googleOAuth2Details(), oAuth2ClientContext);
+    	OAuth2RestTemplate op = new OAuth2RestTemplate(googleOAuth2Details(), oAuth2ClientContext);
+    	OAuth2ErrorHandler hd = (OAuth2ErrorHandler) op.getErrorHandler();
+
+        return op;
     }
 }
